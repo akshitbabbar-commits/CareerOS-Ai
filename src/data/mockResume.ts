@@ -1,0 +1,95 @@
+import type { ResumeAnalysis } from '@/types';
+
+export const mockResumeAnalysis: ResumeAnalysis = {
+  id: 'res_001',
+  userId: 'usr_demo_001',
+  fileName: 'Alex_Johnson_Resume_2025.pdf',
+  atsScore: 78,
+  formatting: {
+    score: 85,
+    maxScore: 100,
+    label: 'Formatting',
+    details: [
+      'Clean section headers detected',
+      'Consistent font usage throughout',
+      'Good use of bullet points',
+      'Consider adding more white space between sections',
+    ],
+  },
+  keywords: {
+    score: 72,
+    maxScore: 100,
+    label: 'Keywords',
+    details: [
+      'Found 12/18 important keywords for AI Engineer role',
+      'Missing: "MLOps", "Model Deployment", "A/B Testing"',
+      'Strong presence of technical skills',
+      'Add more industry-specific terminology',
+    ],
+  },
+  grammar: {
+    score: 90,
+    maxScore: 100,
+    label: 'Grammar',
+    details: [
+      'No major grammatical errors found',
+      'Consistent tense usage',
+      'Consider using more action verbs',
+      'One sentence found with passive voice',
+    ],
+  },
+  impact: {
+    score: 65,
+    maxScore: 100,
+    label: 'Impact',
+    details: [
+      '3 out of 8 bullet points include quantified results',
+      'Add metrics: percentages, dollar amounts, user counts',
+      'Strengthen action verbs in experience section',
+      'Add specific project outcomes and business impact',
+    ],
+  },
+  suggestions: [
+    {
+      id: 'sug_r1',
+      category: 'keywords',
+      severity: 'high',
+      title: 'Add Missing Technical Keywords',
+      description: 'Your resume is missing critical keywords for AI Engineer roles.',
+      original: 'Developed machine learning models for prediction tasks',
+      suggested: 'Developed and deployed ML models using MLOps pipelines, achieving 94% prediction accuracy with A/B testing validation',
+    },
+    {
+      id: 'sug_r2',
+      category: 'impact',
+      severity: 'high',
+      title: 'Quantify Your Achievements',
+      description: 'Adding numbers makes your accomplishments more impactful.',
+      original: 'Improved system performance significantly',
+      suggested: 'Improved system performance by 40%, reducing latency from 200ms to 120ms, serving 10K+ daily users',
+    },
+    {
+      id: 'sug_r3',
+      category: 'content',
+      severity: 'medium',
+      title: 'Add a Professional Summary',
+      description: 'A strong summary at the top helps recruiters understand your profile quickly.',
+    },
+    {
+      id: 'sug_r4',
+      category: 'formatting',
+      severity: 'low',
+      title: 'Optimize Section Order',
+      description: 'For entry-level roles, consider placing Education before Experience.',
+    },
+    {
+      id: 'sug_r5',
+      category: 'impact',
+      severity: 'medium',
+      title: 'Strengthen Project Descriptions',
+      description: 'Include technologies used, your specific role, and measurable outcomes for each project.',
+    },
+  ],
+  missingSkills: ['MLOps', 'Model Deployment', 'A/B Testing', 'Kubernetes', 'CI/CD', 'Data Pipelines'],
+  createdAt: new Date(Date.now() - 1800000).toISOString(),
+};
