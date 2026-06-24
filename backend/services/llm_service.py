@@ -33,6 +33,7 @@ from services.mock_service import (
 
 async def _call_gemini(system_prompt: str, user_message: str) -> str:
     """Make an API call to the Gemini REST API."""
+    import asyncio
     if not settings.GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY is not configured in environment variables.")
 
@@ -67,21 +68,44 @@ async def _call_gemini(system_prompt: str, user_message: str) -> str:
     if "json" in system_prompt.lower() or "json" in user_message.lower():
         payload["generationConfig"]["responseMimeType"] = "application/json"
 
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"]
-    except httpx.HTTPStatusError as e:
-        print(f"[llm_service] HTTP Status Error from Gemini API: {e.response.status_code}")
-        print(f"[llm_service] Response Body: {e.response.text}")
-        traceback.print_exc()
-        raise e
-    except Exception as e:
-        print(f"[llm_service] Unexpected Exception in _call_gemini: {e}")
-        traceback.print_exc()
-        raise e
+    max_retries = 3
+    backoff = 1.0  # seconds
+    for attempt in range(max_retries):
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, headers=headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code in {429, 502, 503, 504} and attempt < max_retries - 1:
+                print(f"[llm_service] Transient status {e.response.status_code} on attempt {attempt + 1}. Retrying in {backoff}s...")
+                await asyncio.sleep(backoff)
+                backoff *= 2.0
+                continue
+            
+            status_code = e.response.status_code
+            error_msg = f"Gemini API returned status {status_code}: {e.response.text}"
+            print(f"[llm_service] HTTP Status Error from Gemini API: {status_code}")
+            print(f"[llm_service] Response Body: {e.response.text}")
+            traceback.print_exc()
+            raise ValueError(error_msg)
+        except (httpx.RequestError, asyncio.TimeoutError) as e:
+            if attempt < max_retries - 1:
+                print(f"[llm_service] Network error '{type(e).__name__}' on attempt {attempt + 1}. Retrying in {backoff}s...")
+                await asyncio.sleep(backoff)
+                backoff *= 2.0
+                continue
+            
+            error_msg = f"Network timeout/connectivity issue calling Gemini API: {str(e)}"
+            print(f"[llm_service] Network Exception in _call_gemini: {e}")
+            traceback.print_exc()
+            raise ValueError(error_msg)
+        except Exception as e:
+            error_msg = f"Unexpected error calling Gemini API: {str(e)}"
+            print(f"[llm_service] Unexpected Exception in _call_gemini: {e}")
+            traceback.print_exc()
+            raise ValueError(error_msg)
 
 
 async def generate_chat_response(message: str, session_type: str = "mentor") -> dict:
@@ -427,6 +451,7 @@ def _get_system_prompt(session_type: str) -> str:
 
 async def _call_llm(system_prompt: str, user_message: str) -> str:
     """Make an API call to the configured LLM provider."""
+    import asyncio
     headers = {
         "Authorization": f"Bearer {settings.LLM_API_KEY}",
         "Content-Type": "application/json",
@@ -441,12 +466,45 @@ async def _call_llm(system_prompt: str, user_message: str) -> str:
         "max_tokens": 1500,
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            f"{settings.LLM_BASE_URL}/chat/completions",
-            headers=headers,
-            json=payload,
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+    max_retries = 3
+    backoff = 1.0  # seconds
+    for attempt in range(max_retries):
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{settings.LLM_BASE_URL}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code in {429, 502, 503, 504} and attempt < max_retries - 1:
+                print(f"[llm_service] Transient status {e.response.status_code} from LLM provider on attempt {attempt + 1}. Retrying in {backoff}s...")
+                await asyncio.sleep(backoff)
+                backoff *= 2.0
+                continue
+            
+            status_code = e.response.status_code
+            error_msg = f"LLM provider API returned status {status_code}: {e.response.text}"
+            print(f"[llm_service] HTTP Status Error from LLM API: {status_code}")
+            print(f"[llm_service] Response Body: {e.response.text}")
+            traceback.print_exc()
+            raise ValueError(error_msg)
+        except (httpx.RequestError, asyncio.TimeoutError) as e:
+            if attempt < max_retries - 1:
+                print(f"[llm_service] Network error '{type(e).__name__}' from LLM provider on attempt {attempt + 1}. Retrying in {backoff}s...")
+                await asyncio.sleep(backoff)
+                backoff *= 2.0
+                continue
+            
+            error_msg = f"Network timeout/connectivity issue calling LLM provider: {str(e)}"
+            print(f"[llm_service] Network Exception in _call_llm: {e}")
+            traceback.print_exc()
+            raise ValueError(error_msg)
+        except Exception as e:
+            error_msg = f"Unexpected error calling LLM provider API: {str(e)}"
+            print(f"[llm_service] Unexpected Exception in _call_llm: {e}")
+            traceback.print_exc()
+            raise ValueError(error_msg)
