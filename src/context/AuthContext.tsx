@@ -90,7 +90,7 @@ function sessionToUser(session: Session): User {
 
 /**
  * Load profile from Supabase. If the row doesn't exist yet
- * (e.g. OAuth user on first login), create it automatically.
+ * (e.g. user on first login), create it automatically.
  */
 async function loadOrCreateProfile(appUser: User): Promise<Profile> {
   let dbRow = await getProfile(appUser.id);
