@@ -16,6 +16,8 @@ async def send_message(body: ChatMessageRequest):
     try:
         result = await generate_chat_response(body.message, body.session_type)
         return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         print(f"[chat_router] Exception in send_message: {e}")
         traceback.print_exc()

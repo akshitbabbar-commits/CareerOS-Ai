@@ -52,7 +52,7 @@ class Settings:
         self.LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4")
         self.LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
         self.GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-        self.GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        self.GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
         # Supabase (for future integration)
         self.SUPABASE_URL = os.getenv("SUPABASE_URL", "")

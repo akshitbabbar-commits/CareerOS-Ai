@@ -18,5 +18,9 @@ async def skill_gap(
     if current_skills:
         skills_list = [s.strip() for s in current_skills.split(",") if s.strip()]
         
-    result = await generate_skill_gap_analysis(role, skills_list)
-    return result
+    try:
+        result = await generate_skill_gap_analysis(role, skills_list)
+        return result
+    except ValueError as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=str(e))

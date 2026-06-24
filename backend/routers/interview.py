@@ -1,6 +1,6 @@
 """Interview API router — start sessions, submit answers, view history."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from config import settings
 from models.schemas import (
@@ -22,14 +22,17 @@ async def start_interview(body: InterviewStartRequest):
     except Exception as e:
         if settings.LLM_PROVIDER == "mock":
             return mock_interview_start(body.type, body.role, body.difficulty)
-        raise e
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/answer")
 async def submit_answer(body: InterviewAnswerRequest):
     """Submit an answer and receive AI-powered feedback."""
-    result = await generate_interview_feedback(body.question_id, body.answer, body.target_role)
-    return result
+    try:
+        result = await generate_interview_feedback(body.question_id, body.answer, body.target_role)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 
