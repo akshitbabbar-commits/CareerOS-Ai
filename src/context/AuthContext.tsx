@@ -16,7 +16,7 @@ import {
   type DbProfile,
 } from '@/lib/profiles';
 import type { Profile, User } from '@/types';
-import type { Session, Provider } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -25,7 +25,6 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, fullName: string) => Promise<void>;
-  loginWithOAuth: (provider: Provider) => Promise<void>;
   logout: () => void;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
@@ -204,23 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  // ---- OAuth (Google, GitHub, etc.) ----
-  const loginWithOAuth = useCallback(async (provider: Provider) => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: typeof window !== 'undefined'
-          ? `${window.location.origin}/dashboard`
-          : undefined,
-      },
-    });
-    if (error) {
-      console.error(`[auth] OAuth ${provider} error:`, error);
-      throw new Error(error.message);
-    }
-    // Browser redirects to provider — profile is created in onAuthStateChange
-    // via loadOrCreateProfile when the user returns.
-  }, []);
+
 
   // ---- Logout ----
   const logout = useCallback(async () => {
@@ -271,7 +254,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         signup,
-        loginWithOAuth,
         logout,
         updateProfile,
       }}
