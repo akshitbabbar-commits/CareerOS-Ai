@@ -93,43 +93,25 @@ export default function MockInterviewPage() {
     setErrorMessage(null);
     setIsSubmittingAnswer(true);
     try {
-      const urls = [
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/interview/start`,
-        `http://localhost:8000/api/interview/start`
-      ];
-
-      let response = null;
-      let lastError = null;
-
-      for (const url of urls) {
-        try {
-          console.log(`[interview] Starting session via: ${url}`);
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: interviewType,
-              role: targetRole,
-              difficulty: difficulty
-            })
-          });
-          if (res.ok) {
-            response = res;
-            break;
-          }
-          const text = await res.text();
-          lastError = new Error(text || `Status code ${res.status}`);
-        } catch (e: any) {
-          console.warn(`[interview] Endpoint failed: ${url}`, e);
-          lastError = e;
-        }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+      const url = `${API_URL}/api/interview/start`;
+      console.log(`[interview] Starting session via: ${url}`);
+      
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: interviewType,
+          role: targetRole,
+          difficulty: difficulty
+        })
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status code ${res.status}`);
       }
 
-      if (!response) {
-        throw lastError || new Error('Could not connect to mock interview service.');
-      }
-
-      const data = await response.json();
+      const data = await res.json();
       setSessionId(data.session_id);
       setQuestions(data.questions);
       setAnswers({});
@@ -158,44 +140,26 @@ export default function MockInterviewPage() {
     const currentQuestion = questions[currentQuestionIndex];
 
     try {
-      const urls = [
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/interview/answer`,
-        `http://localhost:8000/api/interview/answer`
-      ];
-
-      let response = null;
-      let lastError = null;
-
-      for (const url of urls) {
-        try {
-          console.log(`[interview] Submitting answer via: ${url}`);
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              session_id: sessionId,
-              question_id: currentQuestion.id,
-              answer: currentAnswer,
-              target_role: targetRole
-            })
-          });
-          if (res.ok) {
-            response = res;
-            break;
-          }
-          const text = await res.text();
-          lastError = new Error(text || `Status code ${res.status}`);
-        } catch (e: any) {
-          console.warn(`[interview] Endpoint failed: ${url}`, e);
-          lastError = e;
-        }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+      const url = `${API_URL}/api/interview/answer`;
+      console.log(`[interview] Submitting answer via: ${url}`);
+      
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          question_id: currentQuestion.id,
+          answer: currentAnswer,
+          target_role: targetRole
+        })
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status code ${res.status}`);
       }
 
-      if (!response) {
-        throw lastError || new Error('Could not evaluate the answer.');
-      }
-
-      const result = await response.json();
+      const result = await res.json();
       const feedback: InlineFeedback = result.feedback;
       
       // Store current feedback

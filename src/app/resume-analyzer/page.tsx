@@ -132,39 +132,20 @@ export default function ResumeAnalyzerPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      // Define endpoints to check: check environmental API URL or fallback to local 8000
-      const urls = [
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/resume/analyze?target_role=${encodeURIComponent(targetRole)}`,
-        `http://localhost:8000/api/resume/analyze?target_role=${encodeURIComponent(targetRole)}`
-      ];
-
-      let response = null;
-      let lastError = null;
-
-      for (const url of urls) {
-        try {
-          console.log(`[resume] Attempting parse via endpoint: ${url}`);
-          const res = await fetch(url, {
-            method: 'POST',
-            body: formData,
-          });
-          if (res.ok) {
-            response = res;
-            break;
-          }
-          const text = await res.text();
-          lastError = new Error(text || `Server error ${res.status}`);
-        } catch (e: any) {
-          console.warn(`[resume] Endpoint failed: ${url}`, e);
-          lastError = e;
-        }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+      const url = `${API_URL}/api/resume/analyze?target_role=${encodeURIComponent(targetRole)}`;
+      console.log(`[resume] Attempting parse via endpoint: ${url}`);
+      
+      const res = await fetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Server error ${res.status}`);
       }
 
-      if (!response) {
-        throw lastError || new Error('Could not communicate with the backend parser.');
-      }
-
-      const analysisResult = await response.json();
+      const analysisResult = await res.json();
       setUploadProgress(100);
       clearInterval(interval);
 

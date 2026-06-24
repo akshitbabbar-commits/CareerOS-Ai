@@ -142,42 +142,25 @@ export default function AIMentorPage() {
 
     try {
       // Call FastAPI backend chat message endpoint
-      const urls = [
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/chat/message`,
-        `http://localhost:8000/api/chat/message`
-      ];
-
-      let response = null;
-      let lastError = null;
-
-      for (const url of urls) {
-        try {
-          console.log(`[ai-mentor] Querying API at: ${url}`);
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: text,
-              session_type: 'mentor'
-            })
-          });
-          if (res.ok) {
-            response = res;
-            break;
-          }
-          const textErr = await res.text();
-          lastError = new Error(textErr || `Status code ${res.status}`);
-        } catch (e: any) {
-          console.warn(`[ai-mentor] Endpoint failed: ${url}`, e);
-          lastError = e;
-        }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+      const url = `${API_URL}/api/chat/message`;
+      console.log(`[ai-mentor] Querying API at: ${url}`);
+      
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          session_type: 'mentor'
+        })
+      });
+      
+      if (!res.ok) {
+        const textErr = await res.text();
+        throw new Error(textErr || `Status code ${res.status}`);
       }
 
-      if (!response) {
-        throw lastError || new Error('Could not connect to AI Mentor service.');
-      }
-
-      const data = await response.json();
+      const data = await res.json();
       
       const botMsg: Message = {
         id: 'msg_' + Math.random().toString(36).substring(7),

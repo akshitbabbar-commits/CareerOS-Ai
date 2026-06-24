@@ -83,46 +83,28 @@ export default function GenerateRoadmapPage() {
 
     try {
       // 1. Generate roadmap using the Gemini-powered backend API
-      const urls = [
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/roadmap/generate`,
-        `http://localhost:8000/api/roadmap/generate`
-      ];
-
-      let response = null;
-      let lastError = null;
-
-      for (const url of urls) {
-        try {
-          console.log(`[roadmap] Requesting roadmap from: ${url}`);
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              goal: dreamRole,
-              current_skills: skills,
-              experience_level: experienceLevel,
-              hours_per_week: hoursPerWeek,
-            }),
-          });
-          if (res.ok) {
-            response = res;
-            break;
-          }
-          const text = await res.text();
-          lastError = new Error(text || `Status code ${res.status}`);
-        } catch (e: any) {
-          console.warn(`[roadmap] Endpoint failed: ${url}`, e);
-          lastError = e;
-        }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+      const url = `${API_URL}/api/roadmap/generate`;
+      console.log(`[roadmap] Requesting roadmap from: ${url}`);
+      
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          goal: dreamRole,
+          current_skills: skills,
+          experience_level: experienceLevel,
+          hours_per_week: hoursPerWeek,
+        }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status code ${res.status}`);
       }
 
-      if (!response) {
-        throw lastError || new Error('Could not communicate with the roadmap generation service.');
-      }
-
-      const generatedData = await response.json();
+      const generatedData = await res.json();
 
       // Form full roadmap object to save
       const roadmap = {

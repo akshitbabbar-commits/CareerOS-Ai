@@ -75,35 +75,17 @@ export default function SkillGapPage() {
     try {
       const skillsQuery = profile?.skills ? profile.skills.join(',') : '';
       
-      const urls = [
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/skills/gap?role=${encodeURIComponent(role)}&current_skills=${encodeURIComponent(skillsQuery)}`,
-        `http://localhost:8000/api/skills/gap?role=${encodeURIComponent(role)}&current_skills=${encodeURIComponent(skillsQuery)}`
-      ];
-
-      let response = null;
-      let lastError = null;
-
-      for (const url of urls) {
-        try {
-          console.log(`[skill-gap] Fetching comparison via: ${url}`);
-          const res = await fetch(url);
-          if (res.ok) {
-            response = res;
-            break;
-          }
-          const txt = await res.text();
-          lastError = new Error(txt || `Status code ${res.status}`);
-        } catch (e: any) {
-          console.warn(`[skill-gap] Endpoint failed: ${url}`, e);
-          lastError = e;
-        }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+      const url = `${API_URL}/api/skills/gap?role=${encodeURIComponent(role)}&current_skills=${encodeURIComponent(skillsQuery)}`;
+      console.log(`[skill-gap] Fetching comparison via: ${url}`);
+      
+      const res = await fetch(url);
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `Status code ${res.status}`);
       }
 
-      if (!response) {
-        throw lastError || new Error('Could not evaluate skill gap. Ensure backend is running.');
-      }
-
-      const data = await response.json();
+      const data = await res.json();
       const newAnalysis: SkillGapAnalysis = {
         targetRole: data.targetRole,
         matchPercentage: data.matchPercentage,
