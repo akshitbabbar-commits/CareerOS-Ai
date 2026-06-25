@@ -87,6 +87,8 @@ async def _call_gemini(system_prompt: str, user_message: str) -> str:
             status_code = e.response.status_code
             error_msg = f"Gemini API returned status {status_code}: {e.response.text}"
             print(f"[llm_service] HTTP Status Error from Gemini API: {status_code}")
+            print(f"[llm_service] Request URL: https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent")
+            print(f"[llm_service] Model Name: {settings.GEMINI_MODEL}")
             print(f"[llm_service] Response Body: {e.response.text}")
             traceback.print_exc()
             raise ValueError(error_msg)

@@ -52,7 +52,7 @@ class Settings:
         self.LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4")
         self.LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
         self.GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-        self.GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        self.GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
         # Supabase (for future integration)
         self.SUPABASE_URL = os.getenv("SUPABASE_URL", "")
@@ -70,8 +70,6 @@ class Settings:
 settings = Settings()
 
 print("[config] Active settings values:")
-print(f"  - LLM_PROVIDER: {settings.LLM_PROVIDER}")
-print(f"  - GEMINI_API_KEY set: {bool(settings.GEMINI_API_KEY)}")
-print(f"  - GEMINI_MODEL: {settings.GEMINI_MODEL}")
-print(f"  - LLM_API_KEY set: {bool(settings.LLM_API_KEY)}")
-print(f"  - LLM_MODEL: {settings.LLM_MODEL}")
+print(f"LLM_PROVIDER: {settings.LLM_PROVIDER}")
+print(f"GEMINI_API_KEY set: {bool(settings.GEMINI_API_KEY)}")
+print(f"GEMINI_MODEL: {settings.GEMINI_MODEL}")
